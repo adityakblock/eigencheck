@@ -1,24 +1,32 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity ^0.8.13;
+pragma solidity ^0.8.4;
 
 import "forge-std/Test.sol";
-import "../src/Counter.sol";
+import "src/EigenChecker.sol";
 
 contract CounterTest is Test {
-    Counter public counter;
+    EigenChecker checker = new EigenChecker();
 
     function setUp() public {
-        counter = new Counter();
-        counter.setNumber(0);
+        
+        deal(address(checker.WETH()), address(checker), 1000);
+        console.log('balance',checker.WETH().balanceOf(address(checker)));
+        console.log('here');
     }
 
-    function testIncrement() public {
-        counter.increment();
-        assertEq(counter.number(), 1);
+    function testFlow() public {
+        uint shares = checker.deposit(1000);
+        console.log('Shares received', shares);
+        (uint nonce, uint blockNum, bytes32 withdrawalHash) = checker.requestWithdraw(1000);
+
+        console.log('withdrawalHash');
+        console.logBytes32(withdrawalHash);
+
+        vm.roll(blockNum + 11);
+
+        checker.completeWithdrawal(1000, nonce, blockNum);
     }
 
-    function testSetNumber(uint256 x) public {
-        counter.setNumber(x);
-        assertEq(counter.number(), x);
-    }
+    
+
 }
